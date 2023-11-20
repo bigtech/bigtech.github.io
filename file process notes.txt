@@ -1,0 +1,80 @@
+Overview
+
+Each stage is a distinct Azure Function
+Each function has a time to live and must return results within that time; some are durable, some non-durable
+Azure dbs used for processing in a thread-friendly way (no locks)
+Make file import with existing infrastructure that allows peaceful co-existence
+Test with actual client uploads to ensure results are identical
+
+addendum:
+	filespec example -- todo: does .xls contain everthing needed, or does .cs have assumptions, go through ALL
+	test data generator
+	dashboard
+
+
+* Orchestrator - durable function
+
+On the inital trigger of an incoming file (inc. company id, form type id), the Orchestrator will trigger each stage of processing
+
+On completion of each stage, a record is added to the job's progress table that serves to inform the orchestrator to trigger the start of a subsequent process. 
+
+A process pool is used to manage the number of running processes, and their time to live.
+
+The orchestrator collects data on processing time and resource utilization for each phase.  This feeds a dashboard, and could be used to make estimates on job completion.
+
+todo: separate fileformat from any logic
+
+* Stage 1: Prepare (per job) -- explode incoming data into temporary chunk dbs
+
+create temporary db for job (note: be tolerant of multiple triggers, fail/restart
+
+	request from API: 
+		retrieve formdata for this formtype (API may cache)
+		cache companydata for this company -- we'll need it later, if cached, now would be the time to refresh where needed
+
+	quick pass for validity of incoming file -- are the column widths reasonable? do columns with integers appear to have numbers?
+	
+	tables:
+		data
+		formdata
+		companydata
+		jobdata
+			metadata (# records, chunks)
+			progress
+	
+	create db for each chunk (x records)
+		split rawdata into columns, stored in corresponding chunk{x}.column (string, width=formtype definition)
+
+		column for mergedata
+		temp table with column metadata -- (could be all we need from formtype)
+			property: distinctness -- to indicate a column with very few unique values
+			use view? when a column has few values, we'll do the work on an alternate table of distinct values and join later
+
+	add  'prepare-complete' record to progress table (contains # chunks, # columns, todo: define this structure) 
+
+
+* Stage 2: Scan (per chunk) -- validate and backfill chunked data into clean results tables: output, messages
+
+	for each column
+		using column metadata, handle validation rules
+			this may be:
+				defined static rules like IsNumeric, max characters, RegEx pattern match
+				lookups from the formdata, e.g., acceptable values
+				lookups from companydata, e.g., user role exists
+				lookups any datasource that add data, such as state codes, user details for existing users
+			
+		set flags, messages for each column (or just for 'distinct.json' if exists), stored in column metadata
+	
+		summarize column in column summary table
+	
+	add  'validate-col001-complete' record to progress table
+
+* Stage 3: Merge (per job) -- turn clean chunked data into the final output
+
+	iterate through work table / column metadata tables
+	
+	generate completed json
+	
+	store in db tables: result, summary, messages
+
+	add  'merge-complete' record to progress table

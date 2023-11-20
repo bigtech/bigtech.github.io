@@ -1,0 +1,62 @@
+Challenges:
+	PE.com couples UI with business logic
+		difficult to update the appearance, susceptible to side-effect bugs
+		
+	CICP repo is very large
+		slows development
+		difficult for CI/CD
+		demands regression testing
+	DB has lots of business logic
+	
+	file processing - one class per filetype / year
+		eats up developer/QA time
+		scaling issues
+		difficult to provide more advanced features like scaling, fault tolerance, flexible
+	
+Solutions:
+	More use of APIs to extract business logic from PE.com
+	file processing - scalable, based on configuration and generic code, vs custom code 
+
+
+REPO: CICP
+	Databases
+		CICP
+		YearEnd
+		I9
+		Eforms
+		Audit
+		(more)
+	
+	Business Layer
+		UsersAndRoles
+		Company
+		YearEnd
+		ACA
+		I9
+		Eforms
+		(more)
+	
+	PE.com
+		MVC 3, Dot Net Framework 4.8
+	
+	SOAP Services:
+		Realtime
+		Delivery (SMS, Email notifications)
+		FileTransfer
+		FileProcessing
+			~200 file processor classes
+		(more)
+		
+	Maint
+		Windows form, Dot Net Framework 4.8
+
+
+REPO: API CompanyService
+	used in 1 place by PE.com
+
+REPO: API YearEndService
+	currently only used by TFS
+
+REPI: API... (about 6 more)
+
+
