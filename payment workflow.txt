@@ -1,0 +1,38 @@
+
+
+ours
+
+insert javascript
+insert event handler
+external form pops - modal
+on completion event handler called
+copy data to hidden fields, post to endpoint
+endpoint interacts with APIS
+results returned
+
+c84695b
+morgan
+
+set handler details into session (default to authorize.net, but company can override)
+insert placeholder(s)
+
+
+call checkoutStartProxy
+	if authorize
+		no setup
+		load auth.js (include event handler)
+	if jpmorgan
+		get token
+		call checkout intent
+		get checkout token
+
+on complete call checkoutCompleteProxy
+	if authorized
+		scrape data
+		process charge via API
+		log it
+	if jpmorgan
+		log it
+		
+		
+
